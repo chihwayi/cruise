@@ -14,10 +14,13 @@ interface CandidateAttributes {
   maritalStatus?: string;
   nationality?: string;
   citizenship?: string;
+  dateOfBirth?: Date;
   languages?: string[];
   phoneNumber?: string;
   skypeId?: string;
   physicalAddress?: string;
+  city?: string;
+  country?: string;
   placeOfBirth?: string;
   nextOfKinName?: string;
   nextOfKinRelationship?: string;
@@ -53,10 +56,13 @@ class Candidate extends Model<CandidateAttributes, CandidateCreationAttributes> 
   public maritalStatus?: string;
   public nationality?: string;
   public citizenship?: string;
+  public dateOfBirth?: Date;
   public languages?: string[];
   public phoneNumber?: string;
   public skypeId?: string;
   public physicalAddress?: string;
+  public city?: string;
+  public country?: string;
   public placeOfBirth?: string;
   public nextOfKinName?: string;
   public nextOfKinRelationship?: string;
@@ -132,6 +138,10 @@ Candidate.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    dateOfBirth: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     languages: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: true,
@@ -147,6 +157,14 @@ Candidate.init(
     },
     physicalAddress: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    country: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
     placeOfBirth: {

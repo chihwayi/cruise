@@ -6,6 +6,7 @@ import minioClient from '../config/minio';
 import { v4 as uuidv4 } from 'uuid';
 import multer from 'multer';
 import { isBefore } from 'date-fns';
+import ocrService from '../services/document-processing/ocrService';
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -37,20 +38,39 @@ export const uploadDocument = asyncHandler(async (req: AuthRequest, res: Respons
   // Generate file URL
   const fileUrl = `http://localhost:9000/cruise-documents/${fileName}`;
 
+  // If document type not provided or is image, try OCR
+  let detectedDocumentType = documentType;
+  let detectedExpiryDate = expiryDate;
+  
+  if ((!documentType || documentType === 'other') && file.mimetype.startsWith('image/')) {
+    try {
+      const ocrResult = await ocrService.processDocument(file.buffer, file.mimetype);
+      if (ocrResult.extractedData.documentType && ocrResult.extractedData.documentType !== 'other') {
+        detectedDocumentType = ocrResult.extractedData.documentType;
+      }
+      if (ocrResult.extractedData.expiryDate && !expiryDate) {
+        detectedExpiryDate = ocrResult.extractedData.expiryDate;
+      }
+    } catch (error) {
+      console.error('OCR processing failed:', error);
+      // Continue without OCR data
+    }
+  }
+
   // Check if expired
   let isExpired = false;
-  if (expiryDate) {
-    isExpired = isBefore(new Date(expiryDate), new Date());
+  if (detectedExpiryDate) {
+    isExpired = isBefore(new Date(detectedExpiryDate), new Date());
   }
 
   const document = await Document.create({
     candidateId,
-    documentType,
+    documentType: detectedDocumentType,
     fileName: file.originalname,
     fileUrl,
     fileSize: file.size,
     mimeType: file.mimetype,
-    expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+    expiryDate: detectedExpiryDate ? new Date(detectedExpiryDate) : undefined,
     isExpired,
   });
 

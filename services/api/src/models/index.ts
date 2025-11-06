@@ -19,7 +19,8 @@ const models = {
 // Sync database (use with caution in production)
 export const syncDatabase = async (force: boolean = false): Promise<void> => {
   try {
-    await sequelize.sync({ force });
+    // Use alter: true to add new columns without dropping existing data
+    await sequelize.sync({ force, alter: !force });
     console.log('✅ Database models synchronized');
   } catch (error) {
     console.error('❌ Database sync error:', error);

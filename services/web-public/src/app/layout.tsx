@@ -2,12 +2,19 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
+import { GoogleOAuthProviderWrapper } from '@/components/GoogleOAuthProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Cruise Recruitment - Find Your Dream Job at Sea',
   description: 'Explore exciting career opportunities in the cruise industry. Join our team of professional seafarers.',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico' },
+    ],
+  },
 }
 
 export default function RootLayout({
@@ -18,7 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
+        <GoogleOAuthProviderWrapper>
+          {children}
+        </GoogleOAuthProviderWrapper>
         <Toaster
           position="top-right"
           toastOptions={{

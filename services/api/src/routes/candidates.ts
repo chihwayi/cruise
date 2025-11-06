@@ -3,6 +3,7 @@ import {
   registerCandidate,
   getCandidateProfile,
   updateCandidateProfile,
+  checkProfileCompleteness,
   assignEmploymentNumber,
   getAllCandidates,
   getCandidateById,
@@ -24,11 +25,20 @@ const registerSchema = Joi.object({
 });
 
 const updateSchema = Joi.object({
-  firstName: Joi.string().optional(),
-  lastName: Joi.string().optional(),
-  phoneNumber: Joi.string().optional(),
-  physicalAddress: Joi.string().optional(),
-  // Add more fields as needed
+  firstName: Joi.string().optional().allow(''),
+  lastName: Joi.string().optional().allow(''),
+  phoneNumber: Joi.string().optional().allow(''),
+  physicalAddress: Joi.string().optional().allow(''),
+  nationality: Joi.string().optional().allow(''),
+  dateOfBirth: Joi.alternatives().try(
+    Joi.date().allow(null),
+    Joi.string().allow('', null),
+    Joi.valid(null, '')
+  ).optional(),
+  gender: Joi.string().optional().allow(''),
+  maritalStatus: Joi.string().optional().allow(''),
+  city: Joi.string().optional().allow(''),
+  country: Joi.string().optional().allow(''),
 }).min(1);
 
 // Public route - candidate registration
@@ -36,6 +46,7 @@ router.post('/register', validate(registerSchema), registerCandidate);
 
 // Protected routes
 router.get('/profile', authenticate, getCandidateProfile);
+router.get('/profile/completeness', authenticate, checkProfileCompleteness);
 router.put('/profile', authenticate, validate(updateSchema), updateCandidateProfile);
 
 // Admin routes

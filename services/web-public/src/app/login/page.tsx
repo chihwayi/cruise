@@ -10,6 +10,7 @@ import { LogIn, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
 import apiClient from '@/lib/api';
 import toast from 'react-hot-toast';
+import { GoogleLoginButton } from '@/components/GoogleLoginButton';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,9 +28,18 @@ export default function LoginPage() {
         password,
       });
 
+      // Store token for public portal
       localStorage.setItem('token', response.data.token);
-      toast.success('Login successful! Welcome back.');
-      router.push('/candidate/dashboard');
+      // Set flag to indicate this login was from public portal
+      localStorage.setItem('public_portal_login', 'true');
+      
+      toast.success('Login successful! Redirecting to your dashboard...');
+      
+      // Redirect to candidate portal with token in URL (will be stored there)
+      // Note: localStorage is domain-specific, so we pass token via URL
+      setTimeout(() => {
+        window.location.href = `http://localhost:4002/dashboard?token=${encodeURIComponent(response.data.token)}`;
+      }, 1000);
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Login failed. Please check your credentials.');
     } finally {
@@ -73,6 +83,18 @@ export default function LoginPage() {
                 Sign In
               </Button>
             </form>
+            
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            <GoogleLoginButton />
+            
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{' '}

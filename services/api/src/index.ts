@@ -11,6 +11,8 @@ import { syncDatabase } from './models';
 import routes from './routes';
 import { errorHandler } from './middleware/errorHandler';
 import rateLimit from 'express-rate-limit';
+import logger from './config/winston';
+import requestLogger from './middleware/logger';
 
 dotenv.config();
 
@@ -40,10 +42,37 @@ if (process.env.NODE_ENV === 'development') {
   app.use(helmet());
 }
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+// CORS configuration
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = process.env.CORS_ORIGIN 
+      ? process.env.CORS_ORIGIN.split(',')
+      : [
+          'http://localhost:4000',
+          'http://localhost:4001',
+          'http://localhost:4002',
+          'http://localhost:3000',
+          'http://127.0.0.1:4000',
+          'http://127.0.0.1:4001',
+          'http://127.0.0.1:4002',
+        ];
+    
+    if (allowedOrigins.includes(origin) || process.env.CORS_ORIGIN === '*') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+};
+
+app.use(cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -63,6 +92,9 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   app.use(morgan('combined'));
 }
+
+// Request logger middleware
+app.use(requestLogger);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -126,10 +158,13 @@ const initializeServices = async () => {
     }
 
     app.listen(PORT, () => {
+      logger.info(`🚢 Cruise Recruitment API running on port ${PORT}`);
+      logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🚢 Cruise Recruitment API running on port ${PORT}`);
       console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
+    logger.error('❌ Failed to initialize services:', error);
     console.error('❌ Failed to initialize services:', error);
     process.exit(1);
   }

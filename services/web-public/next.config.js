@@ -1,8 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  // Environment variables are automatically available if prefixed with NEXT_PUBLIC_
+  // No need to explicitly set them here in docker-compose environment
+  
+  // Development server configuration to help with chunk loading
+  onDemandEntries: {
+    // Period (in ms) where the server will keep pages in the buffer
+    maxInactiveAge: 60 * 1000, // 60 seconds
+    // Number of pages that should be kept simultaneously without being disposed
+    pagesBufferLength: 5,
   },
 }
 

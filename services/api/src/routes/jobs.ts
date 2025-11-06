@@ -22,6 +22,7 @@ const jobPostingSchema = Joi.object({
   employmentType: Joi.string().optional(),
   startDate: Joi.date().optional(),
   applicationDeadline: Joi.date().optional(),
+  isActive: Joi.boolean().optional(),
 });
 
 // Public route - get all active job postings

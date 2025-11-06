@@ -4,6 +4,7 @@ import Application from '../models/Application';
 import JobPosting from '../models/JobPosting';
 import Candidate from '../models/Candidate';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
+import emailService from '../services/notification/emailService';
 
 export const createApplication = asyncHandler(async (req: AuthRequest, res: Response) => {
   const candidateId = req.userId!;
@@ -122,15 +123,37 @@ export const updateApplicationStatus = asyncHandler(async (req: AuthRequest, res
   const { id } = req.params;
   const { screeningStatus, screeningScore } = req.body;
 
-  const application = await Application.findByPk(id);
+  const application = await Application.findByPk(id, {
+    include: [
+      { model: JobPosting, as: 'jobPosting' },
+      { model: Candidate, as: 'candidate' },
+    ],
+  });
+  
   if (!application) {
     throw new AppError('Application not found', 404);
   }
 
+  const oldStatus = application.screeningStatus;
   await application.update({
     screeningStatus,
     screeningScore,
   });
+
+  // Send email notification if status changed
+  if (oldStatus !== screeningStatus && application.candidate && application.jobPosting) {
+    try {
+      await emailService.sendApplicationStatusEmail(
+        application.candidate.email,
+        application.candidate.firstName,
+        application.jobPosting.title,
+        screeningStatus
+      );
+    } catch (error) {
+      console.error('Failed to send application status email:', error);
+      // Don't fail the update if email fails
+    }
+  }
 
   res.json({
     message: 'Application status updated successfully',

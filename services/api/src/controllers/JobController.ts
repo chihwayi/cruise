@@ -12,11 +12,18 @@ export const createJobPosting = asyncHandler(async (req: AuthRequest, res: Respo
   });
 });
 
-export const getAllJobPostings = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { page = 1, limit = 10, cruiseLineName, search, isActive = true } = req.query;
+export const getAllJobPostings = asyncHandler(async (req: Request, res: Response) => {
+  const { page = 1, limit = 10, cruiseLineName, search, isActive } = req.query;
 
   const offset = (Number(page) - 1) * Number(limit);
-  const where: any = { isActive: isActive === 'true' };
+  const where: any = {};
+  
+  // Handle isActive filter - default to true if not specified
+  if (isActive !== undefined) {
+    where.isActive = isActive === 'true' || isActive === true;
+  } else {
+    where.isActive = true; // Default to showing only active jobs
+  }
 
   if (cruiseLineName) {
     where.cruiseLineName = cruiseLineName;
@@ -49,7 +56,7 @@ export const getAllJobPostings = asyncHandler(async (req: AuthRequest, res: Resp
   });
 });
 
-export const getJobPosting = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const getJobPosting = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const jobPosting = await JobPosting.findByPk(id);

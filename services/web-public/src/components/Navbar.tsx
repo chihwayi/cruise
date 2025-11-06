@@ -13,13 +13,20 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Only show logout if user logged in through public portal
+      // Check for a flag that indicates public portal login
       const token = localStorage.getItem('token');
-      setIsAuthenticated(!!token);
+      const publicPortalLogin = localStorage.getItem('public_portal_login');
+      
+      // Only show authenticated state if token exists AND it was set by public portal
+      // OR if we're on the same domain (which shouldn't happen, but just in case)
+      setIsAuthenticated(!!token && !!publicPortalLogin);
     }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('public_portal_login');
     setIsAuthenticated(false);
     router.push('/');
   };
@@ -41,9 +48,20 @@ export const Navbar: React.FC = () => {
             </Link>
             {isAuthenticated ? (
               <>
-                <Link href="/candidate/dashboard" className="text-gray-700 hover:text-primary-600 transition-colors">
+                <a 
+                  href="http://localhost:4002/dashboard" 
+                  className="text-gray-700 hover:text-primary-600 transition-colors"
+                  onClick={(e) => {
+                    // Pass token if available
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                      e.preventDefault();
+                      window.location.href = `http://localhost:4002/dashboard?token=${encodeURIComponent(token)}`;
+                    }
+                  }}
+                >
                   Dashboard
-                </Link>
+                </a>
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <LogIn className="h-4 w-4 mr-2" />
                   Logout
@@ -85,13 +103,21 @@ export const Navbar: React.FC = () => {
             </Link>
             {isAuthenticated ? (
               <>
-                <Link
-                  href="/candidate/dashboard"
+                <a
+                  href="http://localhost:4002/dashboard"
                   className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    setIsMenuOpen(false);
+                    // Pass token if available
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                      e.preventDefault();
+                      window.location.href = `http://localhost:4002/dashboard?token=${encodeURIComponent(token)}`;
+                    }
+                  }}
                 >
                   Dashboard
-                </Link>
+                </a>
                 <button
                   onClick={() => {
                     handleLogout();
